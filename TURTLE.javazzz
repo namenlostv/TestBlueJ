@@ -1,0 +1,476 @@
+import java.awt.*;
+import javax.swing.*;
+import java.awt.event.*;
+
+public class TURTLE
+{
+    /**x-Koordinate der Turtle*/
+    protected int posX;
+    /**y-Koordinate der Turtle*/
+    protected int posY;     
+    /**Winkel der Turtle im Gradmass*/
+    protected int winkel;            
+    /**Startkoordinate der Turtle*/
+    protected int homeX;
+    /**Startkoordinate der Turtle*/
+    protected int homeY;
+    /**Startwinkel der Turtle*/
+    protected int homeWinkel; 
+    /**Farbe der Turtle*/
+    protected Color farbe;
+    /**Stiftposition*/
+    protected boolean stiftUnten;
+    /**Modus schnell/langsam*/
+    protected boolean schnell;
+    /**Taktdauer im langsam-Modus*/
+    protected int wartezeit;
+
+    private TURTLESYMBOL symbol;
+    private int breiteX, hoeheY;
+    private static OBERFLAECHE oberflaeche = null;
+    private Graphics g;
+    /**
+     * Konstruktor der Turtle
+     * Erzeugt eine Turtle und versetzt sie in einen g&uuml;ltigen Startzustand.
+     */
+
+    public TURTLE() 
+    {
+        if (oberflaeche==null)
+        {
+            oberflaeche = new OBERFLAECHE();
+        }
+        posX=200;
+        posY=200;
+        winkel=0;
+        homeX=posX;
+        homeY=posY;
+        homeWinkel=winkel;
+        farbe = Color.black;
+
+        stiftUnten = true;
+        breiteX = oberflaeche.getBounds().width;
+        hoeheY = oberflaeche.getBounds().height;
+        symbol=new TURTLESYMBOL(oberflaeche,posX,posY,winkel);
+        symbol.StiftfarbeSetzen(Color.black);
+
+        oberflaeche.LeinwandAktivieren();
+        symbol.setVisible(false);
+        symbol.PositionSetzen(posX, posY, winkel);
+
+        symbol.setVisible(true);
+        schnell = true;
+        wartezeit = 10;
+    }
+
+    public OBERFLAECHE OberflaecheGeben()
+    {
+        return oberflaeche;
+    }
+
+    /**
+     * Setzt die Turtle wieder an ihre Ausgangsposition.
+     */
+    private void ZumStartpunktGehen()
+    {
+        posX=homeX;
+        posY=homeY;
+        winkel=homeWinkel;
+        symbol.PositionSetzen(posX, posY, winkel);
+    }
+
+    /**
+     * Bewegt die Turtle nach vorne.
+     * @param laenge Anzahl der L&auml;ngeneinheiten
+     */
+    public void Gehen(double laenge)
+    {
+
+        int neuX =(int) (Math.round(posX + Math.cos(BogenmassGeben(winkel))*laenge));
+        int neuY =(int) (Math.round(posY - Math.sin(BogenmassGeben(winkel))*laenge));
+        symbol.PositionSetzen(neuX, neuY, winkel);
+
+        //symbol.setVisible(false);
+        //symbol.setVisible(true);
+
+        if (stiftUnten) oberflaeche.LinieZeichnen( posX, posY,  neuX,  neuY, farbe);
+        posX = neuX;
+        posY = neuY;
+        if(!schnell)
+        {
+            try
+            {
+                Thread.sleep(wartezeit);
+            }
+            catch (Exception e){System.out.println("Fehler");};
+        }
+    }
+
+    /**
+     * Dreht die Turtle
+     * @param grad Drehwinkel im Gradmass
+     */
+    public void Drehen(int grad)
+    {
+        winkel = (winkel + grad)%360;
+        if(winkel<0)
+        {
+            winkel=winkel+360;
+        }
+        symbol.PositionSetzen(posX, posY, winkel);
+
+        if(!schnell)
+        {
+            try
+            {
+                Thread.sleep(wartezeit);
+            }
+            catch (Exception e){System.out.println("Fehler");};
+        }
+
+    }
+
+    /**
+     * Versetzt Zeichenfl&auml;che und Turtle in den Ausgangszustand
+     */
+    public void Loeschen()
+    {
+        oberflaeche.Loeschen();
+        ZumStartpunktGehen();
+    }
+
+    /**
+     * Setzt die Farbe des Turtle-Stifts (RGB-Code)
+     * @param r Rotanteil (0..255)
+     * @param g Gr&uuml;nanteil (0..255)
+     * @param b Blauanteil (0..255)
+     */
+    public void StiftfarbeSetzen(int r, int g, int b)
+    {
+        farbe = new Color (r,g,b);
+        symbol.StiftfarbeSetzen(farbe);
+    }
+
+    /**
+     * Turtle wechselt in den Modus "nicht zeichnen"
+     */
+    public void StiftHeben()
+    {
+        stiftUnten=false;
+    }
+
+    /**
+     * Turtle wechselt in den Modus "zeichnen"
+     */
+    public void StiftSenken()
+    {
+        stiftUnten=true;
+    }
+
+    /**
+     * Bewegt die Turtle nach vorne.
+     * @param laenge Anzahl der L&auml;ngeneinheiten
+     */
+    public void GeheZu(int xNeu, int yNeu)
+    {
+
+        symbol.PositionSetzen(xNeu, yNeu, winkel);
+        //symbol.setVisible(false);
+        //symbol.setVisible(true);
+
+        if (stiftUnten) oberflaeche.LinieZeichnen( posX, posY,  xNeu,  yNeu, farbe);
+        posX = xNeu;
+        posY = yNeu;
+        if(!schnell)
+        {
+            try
+            {
+                Thread.sleep(wartezeit);
+            }
+            catch (Exception e){System.out.println("Fehler");};
+        }
+    }
+
+    private double BogenmassGeben(int winkel)
+    {
+        return winkel*Math.PI/180;
+    }
+
+    /**
+     * Turtle ohne Zeitverz&ouml;gerung
+     */
+    public void SchnellSetzen()
+    {
+        schnell = true;
+    }
+
+    /**
+     * Turtle mit Zeitverz&ouml;gerung
+     */
+    public void LangsamSetzen()
+    {
+        schnell = false;
+    }
+
+    /**
+     * Taktdauer setzen für den Modus mit Zeitverz&ouml;gerung
+     * @param ms Taktdauer
+     */
+    public void WartezeitSetzen(int ms)
+    {
+        wartezeit = ms;
+    }
+
+    /**
+     * Setzt die Sichtbarkeit des Turtlesymbols
+     * @param istSichtbar gibt an, ob die Turtle sichtbar ist
+     */
+    public void SichtbarkeitSetzen(boolean istSichtbar)
+    {
+        symbol.SichtbarkeitSetzen(istSichtbar);
+    }
+
+    public class TURTLESYMBOL extends JPanel
+    {
+        int winkel;
+        int x,y;
+        int groesse;
+        Color c;
+        boolean istSichtbar;
+
+        public TURTLESYMBOL(OBERFLAECHE o, int xNeu, int yNeu, int winkelNeu)
+        {
+            winkel =winkelNeu;
+            groesse = 30;
+            x=xNeu;
+            y=yNeu;
+            istSichtbar = true;
+
+            setSize(30,30);
+            setMaximumSize(new Dimension(30,30));
+            setMinimumSize(new Dimension(30,30));
+
+            setBackground(new Color(0,0,0,0));
+            o.add(this);
+            setLocation(xNeu,yNeu);
+            setVisible(true);
+
+        }
+
+        void PositionSetzen(int xneu, int yneu, int winkelneu)
+        {
+            setVisible(false);
+            x = xneu;
+            y = yneu;
+            winkel = winkelneu;
+            setLocation((int)(xneu-RadiusGeben()*(1-Math.cos(bogen(winkel)))),(int)(yneu-RadiusGeben()*Math.sin(bogen(winkel))-15));
+            setVisible(true);
+            repaint();
+        }
+
+        public void paint(Graphics g)
+        {
+            int groesse;
+            int radius;
+            groesse = 40;
+            if(getWidth() < groesse)
+            {
+                groesse=getWidth();
+            }
+
+            radius = groesse/2;
+            g.setColor(Color.red);
+            Graphics2D g2 = (Graphics2D) g;
+
+            g2.rotate(-winkel * Math.PI / 180.0,15,15);
+
+            if(istSichtbar)
+            {
+                //Kopf
+                g.setColor(new Color(0,200,0));
+                g2.fillOval(20,10,10,10);
+
+                //Beine
+                g2.fillOval(9,2,5,7);
+                g2.fillOval(16,2,5,7);
+                g2.fillOval(9,19,5,7);
+                g2.fillOval(16,19,5,7);
+
+                g.setColor(c);
+                //Augen
+                g2.fillRect(27,11,2,3);
+                g2.fillRect(27,16,2,3);
+
+                //Schwanz
+                g2.fillOval(0,12,10,4);
+                //Rumpf
+                g.setColor(new Color(139,69,19));
+
+                g2.fillOval(3,5,23,18);
+            }
+        }
+
+        int RadiusGeben()
+        {
+            return (int)(groesse/2);
+        }
+
+        void StiftfarbeSetzen(Color cNeu)
+        {
+            c=cNeu;
+            repaint();
+        }
+
+        private double bogen(double winkel)
+        {
+            return winkel*Math.PI/180;
+        }
+
+        void SichtbarkeitSetzen(boolean b)
+        {
+            istSichtbar=b;
+            repaint();
+        }
+
+    }
+
+    public class OBERFLAECHE extends JFrame implements WindowListener{
+
+        private Image image;
+        private LEINWAND leinwand;
+
+        private OBERFLAECHE(String name, int width, int height) {
+            super(name);
+            setPreferredSize(new Dimension(width, height));
+            pack();
+            addWindowListener(this);
+            setVisible(true);
+            leinwand = new LEINWAND(this);
+        }
+
+        private OBERFLAECHE() {
+            super("Turtle");
+            setPreferredSize(new Dimension(600,600));
+            pack();
+            addWindowListener(this);
+            setVisible(true);
+            leinwand = new LEINWAND(this);
+        }
+
+        public OBERFLAECHE OberflaecheGeben()
+        {
+            return new OBERFLAECHE();
+        }
+
+        public void Warten() {
+            while (isVisible()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    setVisible(false);
+                }
+            }
+        }
+
+
+        public void windowActivated(WindowEvent e) {    
+            paint(getGraphics());
+        }
+
+        public void windowClosed(WindowEvent e) {
+        }
+
+        public void windowClosing(WindowEvent e) {
+            setVisible(false);
+            dispose();
+        }
+
+        public void windowDeactivated(WindowEvent e) {
+        }
+
+        public void windowDeiconified(WindowEvent e) {
+            paint(getGraphics());
+        }
+
+        public void windowIconified(WindowEvent e) {
+        }
+
+        public void windowOpened(WindowEvent e) {
+        }
+
+        public void paint(Graphics graphics) {
+            super.paint(graphics);
+            graphics.drawImage(image, 0, 0, Color.white, null);
+        }
+
+        public void LeinwandAktivieren()
+        {
+            leinwand.setVisible(false);
+            leinwand = new LEINWAND(this);
+            leinwand.setVisible(true);
+
+            add(leinwand);
+            pack();
+        }
+
+        public void LinieZeichnen(int x1, int y1, int x2, int y2, Color farbe)
+        {
+            leinwand.LinieZeichnen(x1,y1,x2,y2, farbe);
+        }
+
+        public void Loeschen()
+        {
+            leinwand.Loeschen();
+        }
+
+        public class LEINWAND extends JPanel
+
+        {
+
+            double hoehe, breite;
+            Graphics2D g;
+            java.awt.image.BufferedImage img ;
+
+            /**
+             * Constructor for objects of class TURTLESYMBOL
+             */
+            public LEINWAND(OBERFLAECHE cont)
+            {
+                super();
+                hoehe = 1000;
+                breite = 1000;
+
+                setSize((int)hoehe, (int)breite);
+                setBackground(Color.red);
+
+                int width = 1000, height = 1000;
+                img = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage( width, height );
+                g = img.createGraphics();
+                g.setColor( Color.WHITE );
+                g.fillRect(0,0,width, height);
+
+            }
+
+            void LinieZeichnen(int x1neu, int y1neu, int x2neu, int y2neu, Color c)
+            {
+
+                g.setColor(c);
+                g.drawLine(x1neu, y1neu, x2neu, y2neu);
+                repaint();
+            }
+
+            public void paint(Graphics g) {
+
+                g.drawImage(img,0,0,this);
+            }
+
+            public void Loeschen()
+            {
+                g.setColor(Color.white);
+                g.fillRect(0,0,2000,2000);
+                repaint();
+            }
+
+        }
+    }
+}
